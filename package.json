@@ -1,0 +1,25 @@
+{
+  "fitbit": {
+    "appUUID": "9830f043-b9aa-4400-bd5f-618e9d96e76c",
+    "appType": "app",
+    "appDisplayName": "Dublin Transport",
+    "iconFile": "resources/icon.png",
+    "wipeColor": "#4caf50",
+    "requestedPermissions": [
+      "access_internet",
+      "access_location"
+    ],
+    "buildTargets": [
+      "higgs",
+      "meson"
+    ],
+    "i18n": {
+      "en": {
+        "name": "Dublin Transport"
+      },
+      "de": {
+        "name": "Dublin Transport"
+      }
+    }
+  }
+}
