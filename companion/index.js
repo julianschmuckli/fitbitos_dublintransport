@@ -18,13 +18,13 @@ function locationError(error) {
 function getStations(position) {
   var latitude, longitude;
   
-  latitude = position.coords.latitude;
-  longitude = position.coords.longitude;
+  //latitude = position.coords.latitude;
+  //longitude = position.coords.longitude;
   
   //@Test
-  /*var location_chosen = 0;
+  var location_chosen = 0;
   latitude = [53.323288, 53.398299][location_chosen];
-  longitude = [-6.261120, -6.242622][location_chosen];*/
+  longitude = [-6.261120, -6.242622][location_chosen];
   
   console.log("Location: "+latitude+", "+longitude);
   var url = "https://api.schmuckli.net/fitbit_os/dublin_transport/near_locations.php?lat="+latitude+"&lon="+longitude;

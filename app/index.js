@@ -20,6 +20,8 @@ let name = document.getElementById("name");
 let stationboard = document.getElementById("stationboard");
 let scrollview = document.getElementById('scrollview');
 
+let time_changer = document.getElementById("time_changer");
+
 let time_one__background_number = document.getElementById("time_one-background_number");
 let time_one__number = document.getElementById("time_one-number");
 let time_one__destination = document.getElementById("time_one-destination");
@@ -61,7 +63,7 @@ messaging.peerSocket.onerror = function(err) {
 }
 
 function getStations() {  
-  translateScreen("Bitte warten...", "Station in deiner Nähe wird abgefragt...\n\nBitte habe etwas Geduld.", "Please wait...", "Retrieving the timetable of a station near you. Please have patience.");
+  translateScreen("Bitte warten...", "Station in deiner Nähe wird abgefragt...\n\nBitte habe etwas Geduld.", "Please wait...", "Retrieving the timetable of a stop near you.");
   scrollview.height = 150;
 }
 
@@ -84,7 +86,7 @@ messaging.peerSocket.onmessage = function(evt) {
         data_name = evt.data.name;
       }
       name.text = data_name;
-      name.onclick = function(e){
+      time_changer.onclick = function(e){
         changeTimeDisplay();
       }
       
@@ -220,14 +222,14 @@ messaging.peerSocket.onmessage = function(evt) {
       document.onkeypress = function(e) {
         if(e.key=="down"){
           if(index<=8){
-            translateScreen("Nächste Station...", "", "Next station...", "");
+            translateScreen("Nächste Station...", "", "Next stop...", "");
             
             index++;
             messaging.peerSocket.send({key:"changeStationDown"});
           }
         }else if(e.key=="up"){
           if(index>1){
-            translateScreen("Vorherige Station...", "", "Previous station...", "");
+            translateScreen("Vorherige Station...", "", "Previous stop...", "");
             
             index--;
             messaging.peerSocket.send({key:"changeStationUp"});
@@ -319,12 +321,6 @@ function getMinutes(timestamp){
 function getColors(operator, number){
   var colors;
   switch(operator){
-    case 'RVBW':
-      colors = RVBW(number);
-      break;
-    case 'PAG':
-      colors = {line_color:"#FFCC00",line_color_font:"#000"};
-      break;
     default:
       console.log("----------");
       console.log("Unknown operator: "+operator);
