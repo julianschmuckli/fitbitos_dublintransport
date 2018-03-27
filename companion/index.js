@@ -1,5 +1,6 @@
 import { geolocation } from "geolocation";
 import * as messaging from "messaging";
+import { settingsStorage } from "settings";
 
 var index = 1;
 
@@ -22,7 +23,7 @@ function getStations(position) {
   //longitude = position.coords.longitude;
   
   //@Test
-  var location_chosen = 0;
+  var location_chosen = 1;
   latitude = [53.323288, 53.398299][location_chosen];
   longitude = [-6.261120, -6.242622][location_chosen];
   
@@ -98,6 +99,7 @@ function sendResponse(response){
   if (messaging.peerSocket.readyState === messaging.peerSocket.OPEN) {
     // Send a command to the device
     console.log("Sending response");
+    console.log(response);
     messaging.peerSocket.send(response);
   } else {
     console.log("Error: Connection is not open");
@@ -124,4 +126,32 @@ messaging.peerSocket.onmessage = function(evt) {
 messaging.peerSocket.onerror = function(err) {
   // Handle any errors
   console.log("Connection error: " + err.code + " - " + err.message);
+}
+
+/*
+----------------------------------
+--------  Settings  --------------
+----------------------------------
+*/
+
+settingsStorage.onchange = function(evt) {
+  if (evt.key === "searchStations"){
+    loadResults(evt.newValue);
+  }
+}
+
+function loadResults(value){
+  var autoValues = [];
+ 
+  var url = "https://api.schmuckli.net/fitbit_os/dublin_transport/find_location.php?name="+value;
+  fetch(url).then(function (response) {
+      response.text()
+      .then(function(data) {
+        var data = JSON.parse(data);
+        for(var i=0;i<data["results"].length;i++){
+          autoValues.push({name: data["results"][i]["name"],value: data["results"][i]["id"]});
+        }
+        settingsStorage.setItem('resultStations', JSON.stringify(autoValues));
+      });
+  });
 }

@@ -4,11 +4,16 @@ import { vibration } from "haptics";
 import { geolocation } from "geolocation";
 import { locale } from "user-settings";
 
+import * as util from "../common/utils.js";
+import * as operator from "../common/operators.js";
+
 console.log("App Started");
 
 var message_received = false;
 var displayInMinutes = false;
 var language = locale.language;
+
+var current_menu = -1; //-1 -> Start pre_select; 0 -> Favourites; 1 -> Location
 
 var index = 1;
 var GPSoptions = {
@@ -21,6 +26,8 @@ let stationboard = document.getElementById("stationboard");
 let scrollview = document.getElementById('scrollview');
 
 let time_changer = document.getElementById("time_changer");
+
+let pre_select = document.getElementById("pre_select");
 
 let time_one__background_number = document.getElementById("time_one-background_number");
 let time_one__number = document.getElementById("time_one-number");
@@ -149,7 +156,7 @@ messaging.peerSocket.onmessage = function(evt) {
       }
       
       /* Time 1 */
-      var colors = getColors(evt.data.operators[0], evt.data.number[0]);
+      var colors = operator.getColors(evt.data.operators[0], evt.data.number[0]);
       
       time_one__number.style.fill = colors.line_color_font;
       time_one__background_number.style.fill = colors.line_color;
@@ -157,7 +164,7 @@ messaging.peerSocket.onmessage = function(evt) {
       time_one__number.text = evt.data.number[0];
       
       time_one__destination.text = evt.data.to[0];
-      time_one__time.text = getTime(evt.data.departures[0])
+      time_one__time.text = util.getTime(evt.data.departures[0])
       if(evt.data.platforms[0]==null){
         time_one__platform.text = evt.data.categories[0];
       }else{
@@ -166,7 +173,7 @@ messaging.peerSocket.onmessage = function(evt) {
       
       /* Time 2 */
       
-      var colors = getColors(evt.data.operators[1], evt.data.number[1]);
+      var colors = operator.getColors(evt.data.operators[1], evt.data.number[1]);
       
       time_two__number.style.fill = colors.line_color_font;
       time_two__background_number.style.fill = colors.line_color;
@@ -174,7 +181,7 @@ messaging.peerSocket.onmessage = function(evt) {
       time_two__number.text = evt.data.number[1];
       
       time_two__destination.text = evt.data.to[1];
-      time_two__time.text = getTime(evt.data.departures[1])
+      time_two__time.text = util.getTime(evt.data.departures[1])
       if(evt.data.platforms[1]==null){
         time_two__platform.text = evt.data.categories[1];
       }else{
@@ -183,7 +190,7 @@ messaging.peerSocket.onmessage = function(evt) {
       
       /* Time 3 */
       
-      var colors = getColors(evt.data.operators[2], evt.data.number[2]);
+      var colors = operator.getColors(evt.data.operators[2], evt.data.number[2]);
       
       time_three__number.style.fill = colors.line_color_font;
       time_three__background_number.style.fill = colors.line_color;
@@ -191,7 +198,7 @@ messaging.peerSocket.onmessage = function(evt) {
       time_three__number.text = evt.data.number[2];
       
       time_three__destination.text = evt.data.to[2];
-      time_three__time.text = getTime(evt.data.departures[2])
+      time_three__time.text = util.getTime(evt.data.departures[2])
       if(evt.data.platforms[2]==null){
         time_three__platform.text = evt.data.categories[2];
       }else{
@@ -200,7 +207,7 @@ messaging.peerSocket.onmessage = function(evt) {
       
       /* Time 4 */
       
-      var colors = getColors(evt.data.operators[3], evt.data.number[3]);
+      var colors = operator.getColors(evt.data.operators[3], evt.data.number[3]);
       
       time_four__number.style.fill = colors.line_color_font;
       time_four__background_number.style.fill = colors.line_color;
@@ -208,7 +215,7 @@ messaging.peerSocket.onmessage = function(evt) {
       time_four__number.text = evt.data.number[3];
       
       time_four__destination.text = evt.data.to[3];
-      time_four__time.text = getTime(evt.data.departures[3]);
+      time_four__time.text = util.getTime(evt.data.departures[3]);
       if(evt.data.platforms[3]==null){
         time_four__platform.text = evt.data.categories[3];
       }else{
@@ -225,14 +232,14 @@ messaging.peerSocket.onmessage = function(evt) {
             translateScreen("Nächste Station...", "", "Next stop...", "");
             
             index++;
-            messaging.peerSocket.send({key:"changeStationDown"});
+            messaging.peerSocket.send({key:"changeStationDown", menu: current_menu});
           }
         }else if(e.key=="up"){
           if(index>1){
             translateScreen("Vorherige Station...", "", "Previous stop...", "");
             
             index--;
-            messaging.peerSocket.send({key:"changeStationUp"});
+            messaging.peerSocket.send({key:"changeStationUp", menu: current_menu});
           }
         }
       }
@@ -273,10 +280,10 @@ function changeTimeDisplay(){
     time_three__time.x = distance_between_time_and_details;
     time_four__time.x = distance_between_time_and_details;
     
-    time_one__time.text = getTime(data.departures[0]);
-    time_two__time.text = getTime(data.departures[1]);
-    time_three__time.text = getTime(data.departures[2]);
-    time_four__time.text = getTime(data.departures[3]);
+    time_one__time.text = util.getTime(data.departures[0]);
+    time_two__time.text = util.getTime(data.departures[1]);
+    time_three__time.text = util.getTime(data.departures[2]);
+    time_four__time.text = util.getTime(data.departures[3]);
     displayInMinutes = true;
   }
 }
@@ -291,48 +298,30 @@ setTimeout(function(){
   }
 }, 10000);
 
-function getTime(timestamp){
-  var date = new Date(timestamp*1000);
-  // Hours part from the timestamp
-  var hours = pad(date.getHours(),2);
-  // Minutes part from the timestamp
-  var minutes = "0" + date.getMinutes();
-  // Seconds part from the timestamp
-  var seconds = "0" + date.getSeconds();
+//Pre-select
+let pre_select_container = document.getElementById("pre_select").getElementById("container");
+let pre_select_currentIndex = 0;
 
-  // Will display time in 10:30:23 format
-  return hours + ":" + minutes.substr(-2);
-}
+document.getElementsByClassName('pre_selector').forEach(function(current){
+  current.addEventListener("click", function() {
+    pre_select.style.display = "none";
+    switch(pre_select_currentIndex){
+      case 0: //Favourites
+        current_menu = 0;
+        break;
+      case 1: //Location
+        current_menu = 1;
+        break;
+    }
+  });
+});
 
-function getMinutes(timestamp){
-  var current_time = new Date();
-  var time = new Date(timestamp*1000);
-  
-  var timeDiff = Math.abs(time.getTime() - current_time.getTime());
-  var diffMinutes = Math.ceil(timeDiff / (1000 * 60));
-  var diffHours = Math.ceil(timeDiff / (1000 * 60 * 60));
-  if(diffMinutes<60) {
-    return diffMinutes + " Min.";
-  }else{
-    return diffHours + " Std.";
-  }
-}
+setInterval(function() {
+  pre_select_currentIndex = pre_select_container.value; // get the current index (don't do this IRL)
+}, 100);
 
-function getColors(operator, number){
-  var colors;
-  switch(operator){
-    default:
-      console.log("----------");
-      console.log("Unknown operator: "+operator);
-      console.log("----------");
-      colors = {line_color:"#fff",line_color_font:"#000"};
-      break;
-  }
-  return colors;
-}
 
-function pad(num, size) {
-    var s = num+"";
-    while (s.length < size) s = "0" + s;
-    return s;
-}
+setTimeout(function() {
+  pre_select_container.value = 0; // jump to first slide
+}, 2000)
+
