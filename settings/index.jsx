@@ -9,6 +9,8 @@ function settings(props) {
           label="First favourite stop"
           placeholder="Search for stops"
           action="Add stop"
+          value={(() => { try{JSON.parse(props.settingsStorage.getItem("favourite_1"))}catch(e){}})()}
+          onChange={value => props.settingsStorage.setItem('favourite_1', JSON.stringify(value))}
           onAutocomplete={(value) => {
             const autoValues = [];
             
@@ -24,6 +26,8 @@ function settings(props) {
           label="Second favourite stop"
           placeholder="Search for stops"
           action="Add stop"
+          value={(() => { try{JSON.parse(props.settingsStorage.getItem("favourite_1"))}catch(e){}})()}
+          onChange={value => props.settingsStorage.setItem('favourite_2', JSON.stringify(value))}
           onAutocomplete={(value) => {
             const autoValues = [];
             

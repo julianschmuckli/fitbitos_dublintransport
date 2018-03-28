@@ -227,20 +227,25 @@ messaging.peerSocket.onmessage = function(evt) {
       
       //Change station
       document.onkeypress = function(e) {
-        if(e.key=="down"){
+        if(e.key == "down"){
           if(index<=8){
             translateScreen("Nächste Station...", "", "Next stop...", "");
             
             index++;
             messaging.peerSocket.send({key:"changeStationDown", menu: current_menu});
           }
-        }else if(e.key=="up"){
+        }else if(e.key == "up"){
           if(index>1){
             translateScreen("Vorherige Station...", "", "Previous stop...", "");
             
             index--;
             messaging.peerSocket.send({key:"changeStationUp", menu: current_menu});
           }
+        }else if (e.key == "back" && current_menu != -1){
+          e.preventDefault();
+          pre_select.style.display = "inline";
+          current_menu = -1;
+          index = 1;
         }
       }
     }
@@ -269,10 +274,10 @@ function changeTimeDisplay(){
     time_three__time.x = time_three__time.x - 10;
     time_four__time.x = time_four__time.x - 10;
     
-    time_one__time.text = getMinutes(data.departures[0]);
-    time_two__time.text = getMinutes(data.departures[1]);
-    time_three__time.text = getMinutes(data.departures[2]);
-    time_four__time.text = getMinutes(data.departures[3]);
+    time_one__time.text = util.getMinutes(data.departures[0]);
+    time_two__time.text = util.getMinutes(data.departures[1]);
+    time_three__time.text = util.getMinutes(data.departures[2]);
+    time_four__time.text = util.getMinutes(data.departures[3]);
     displayInMinutes = false;
   }else{
     time_one__time.x = distance_between_time_and_details;
@@ -308,9 +313,11 @@ document.getElementsByClassName('pre_selector').forEach(function(current){
     switch(pre_select_currentIndex){
       case 0: //Favourites
         current_menu = 0;
+        messaging.peerSocket.send({key:"loadFavourites", menu: current_menu});
         break;
       case 1: //Location
         current_menu = 1;
+        messaging.peerSocket.send({key:"loadLocation", menu: current_menu});
         break;
     }
   });

@@ -3,6 +3,7 @@ import * as messaging from "messaging";
 import { settingsStorage } from "settings";
 
 var index = 1;
+var current_favourite_number = -1;
 
 console.log("App started");
 
@@ -40,51 +41,7 @@ function getStations(position) {
              searched_index++;
           }
           if(data["results"][i]["id"]!=undefined && searched_index >= index){
-            var url2 = "https://data.smartdublin.ie/cgi-bin/rtpi/realtimebusinformation?stopid="+data["results"][i]["id"]+"&format=json";
-            //console.log(url2);
-            fetch(url2)
-            .then(function (response2) {
-                response2.text()
-                .then(function(data2) {
-                  //console.log("Hallo:"+data2);
-                  var data2 = JSON.parse(data2);
-                  var data_response = {
-                    name: data["results"][i]["name"],
-                    to:[],
-                    departures:[],
-                    number:[],
-                    operators:[],
-                    platforms:[],
-                    categories:[]
-                  }
-                  
-                  for(var ia=0;ia<data2["results"].length;ia++){
-                    //console.log(ia+": "+data2["stationboard"][ia]["to"]);
-                    try{
-                      var departure = data2["results"][ia]["departuredatetime"];
-                      var time = departure.split(" ")[1].split(":");
-                      
-                      var departure = new Date();
-                      departure.setHours(time[0]);
-                      departure.setMinutes(time[1]);
-                      departure.setSeconds(time[2]);
-                      
-                      data_response.to[ia] = data2["results"][ia]["destination"];
-                      data_response.departures[ia] = departure.getTime()/1000;
-                      data_response.number[ia] = data2["results"][ia]["route"];
-                      data_response.operators[ia] = data2["results"][ia]["operator"];
-                      data_response.platforms[ia] = "";
-                      data_response.categories[ia] = "";
-                    }catch(e){
-                      
-                    }
-                  }
-
-                  sendResponse(data_response);
-                });
-            }).catch(function (err) {
-              console.log("Error fetching data from internet: " + err);
-            });
+            fetchStop(data["results"][i]["id"], data.results[i].name);
             break;
           }
         }
@@ -92,6 +49,59 @@ function getStations(position) {
   })
   .catch(function (err) {
     console.log("Error fetching: " + err);
+  });
+}
+
+function getFavourite(setting){
+  return fetchStop(setting.value, setting.name);
+}
+
+function fetchStop(id, name){
+  console.log("Name: "+name + id);
+  var url2 = "https://data.smartdublin.ie/cgi-bin/rtpi/realtimebusinformation?stopid="+id+"&format=json";
+  console.log(url2);
+  fetch(url2)
+  .then(function (response2) {
+      response2.text()
+      .then(function(data2) {
+        //console.log("Hallo:"+data2);
+        var data2 = JSON.parse(data2);
+        var data_response = {
+          name: name,
+          to:[],
+          departures:[],
+          number:[],
+          operators:[],
+          platforms:[],
+          categories:[]
+        }
+
+        for(var ia=0;ia<data2["results"].length;ia++){
+          //console.log(ia+": "+data2["stationboard"][ia]["to"]);
+          try{
+            var departure = data2["results"][ia]["departuredatetime"];
+            var time = departure.split(" ")[1].split(":");
+
+            var departure = new Date();
+            departure.setHours(time[0]);
+            departure.setMinutes(time[1]);
+            departure.setSeconds(time[2]);
+
+            data_response.to[ia] = data2["results"][ia]["destination"];
+            data_response.departures[ia] = departure.getTime()/1000;
+            data_response.number[ia] = data2["results"][ia]["route"];
+            data_response.operators[ia] = data2["results"][ia]["operator"];
+            data_response.platforms[ia] = "";
+            data_response.categories[ia] = "";
+          }catch(e){
+
+          }
+        }
+
+        sendResponse(data_response);
+      });
+  }).catch(function (err) {
+    console.log("Error fetching data from internet: " + err);
   });
 }
 
@@ -108,17 +118,29 @@ function sendResponse(response){
 
 messaging.peerSocket.onopen = function() {
   console.log("Socket open");
-  geolocation.getCurrentPosition(getStations, locationError, GPSoptions);
 }
 
 // Listen for messages from the device
 messaging.peerSocket.onmessage = function(evt) {
-  if(evt.data.key=="changeStationDown"){
+  //Locations
+  if(evt.data.key=="changeStationDown" && evt.data.menu == 1){
     index++;
     geolocation.getCurrentPosition(getStations, locationError, GPSoptions);
-  }else if(evt.data.key=="changeStationUp"){
+  }else if(evt.data.key=="changeStationUp" && evt.data.menu == 1){
     index--;
     geolocation.getCurrentPosition(getStations, locationError, GPSoptions);
+  } else if(evt.data.menu == 1){
+    index = 1;
+    geolocation.getCurrentPosition(getStations, locationError, GPSoptions);
+  }
+  //Favourites
+  else if(evt.data.key=="changeStationDown" && evt.data.menu == 0){
+    getFavourite(JSON.parse(settingsStorage.getItem("favourite_2")));
+  }else if(evt.data.key=="changeStationUp" && evt.data.menu == 0){
+    getFavourite(JSON.parse(settingsStorage.getItem("favourite_1")));
+  }else{
+    index = 1;
+    getFavourite(JSON.parse(settingsStorage.getItem("favourite_1")));
   }
 }
 
