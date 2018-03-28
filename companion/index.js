@@ -2,6 +2,8 @@ import { geolocation } from "geolocation";
 import * as messaging from "messaging";
 import { settingsStorage } from "settings";
 
+import * as variables from "../common/variables.js";
+
 var index = 1;
 var current_favourite_number = -1;
 
@@ -20,16 +22,16 @@ function locationError(error) {
 function getStations(position) {
   var latitude, longitude;
   
-  //latitude = position.coords.latitude;
-  //longitude = position.coords.longitude;
+  latitude = position.coords.latitude;
+  longitude = position.coords.longitude;
   
   //@Test
-  var location_chosen = 1;
+  /*var location_chosen = 1;
   latitude = [53.323288, 53.398299][location_chosen];
-  longitude = [-6.261120, -6.242622][location_chosen];
+  longitude = [-6.261120, -6.242622][location_chosen];*/
   
   console.log("Location: "+latitude+", "+longitude);
-  var url = "https://api.schmuckli.net/fitbit_os/dublin_transport/near_locations.php?lat="+latitude+"&lon="+longitude;
+  var url = variables.getURLStationNames(latitude, longitude);
   //console.log("Loading data from "+url);
   fetch(url).then(function (response) {
       response.text()
@@ -53,18 +55,21 @@ function getStations(position) {
 }
 
 function getFavourite(setting){
-  return fetchStop(setting.value, setting.name);
+  try{
+    return fetchStop(setting.value, setting.name);
+  }catch(e){
+    console.log("Test:"+e);
+    return null;
+  }
 }
 
 function fetchStop(id, name){
-  console.log("Name: "+name + id);
-  var url2 = "https://data.smartdublin.ie/cgi-bin/rtpi/realtimebusinformation?stopid="+id+"&format=json";
+  var url2 = variables.getURLStationDetails(id);
   console.log(url2);
   fetch(url2)
   .then(function (response2) {
       response2.text()
       .then(function(data2) {
-        //console.log("Hallo:"+data2);
         var data2 = JSON.parse(data2);
         var data_response = {
           name: name,

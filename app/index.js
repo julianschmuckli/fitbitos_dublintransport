@@ -97,31 +97,8 @@ messaging.peerSocket.onmessage = function(evt) {
         changeTimeDisplay();
       }
       
+      hideTimeTable();
       stationboard.style.display = "none";
-      
-      time_one__background_number.style.display = "none";
-      time_one__number.style.display = "none";
-      time_one__destination.style.display = "none";
-      time_one__platform.style.display = "none";
-      time_one__time.style.display = "none";
-      
-      time_two__background_number.style.display = "none";
-      time_two__number.style.display = "none";
-      time_two__destination.style.display = "none";
-      time_two__platform.style.display = "none";
-      time_two__time.style.display = "none";
-      
-      time_three__background_number.style.display = "none";
-      time_three__number.style.display = "none";
-      time_three__destination.style.display = "none";
-      time_three__platform.style.display = "none";
-      time_three__time.style.display = "none";
-      
-      time_four__background_number.style.display = "none";
-      time_four__number.style.display = "none";
-      time_four__destination.style.display = "none";
-      time_four__platform.style.display = "none";
-      time_four__time.style.display = "none";
 
       var data_result="";
       for(var i = 0;i<evt.data.to.length;i++){
@@ -253,6 +230,7 @@ messaging.peerSocket.onmessage = function(evt) {
 }
 
 function translateScreen(name_text_de, content_text_de, name_text_en, content_text_en){
+  hideTimeTable();
   switch(language){
     case 'de-de':
     case 'de-DE':
@@ -293,16 +271,6 @@ function changeTimeDisplay(){
   }
 }
 
-setTimeout(function(){
-  if(!message_received){
-    translateScreen("Keine Verbindung", "Zurzeit kann keine Verbindung mit dem Smartphone hergestellt werden.",
-                    "No connection", "It seems that you don't have a connection to your phone.");
-    
-    scrollview.height = 150;
-    vibration.start("nudge-max");
-  }
-}, 10000);
-
 //Pre-select
 let pre_select_container = document.getElementById("pre_select").getElementById("container");
 let pre_select_currentIndex = 0;
@@ -314,10 +282,16 @@ document.getElementsByClassName('pre_selector').forEach(function(current){
       case 0: //Favourites
         current_menu = 0;
         messaging.peerSocket.send({key:"loadFavourites", menu: current_menu});
+        
+        startNoInternetTimer();
+        translateScreen("Lade deine Favoriten...","Falls du noch keine Favoriten definiert hast, kannst du diese in den Einstellungen festlegen.","Loading your favourites...","If you didn't have defined your favourites, you can do this via the settings in the app.");
         break;
       case 1: //Location
         current_menu = 1;
         messaging.peerSocket.send({key:"loadLocation", menu: current_menu});
+        
+        startNoInternetTimer();
+        getStations();
         break;
     }
   });
@@ -332,3 +306,43 @@ setTimeout(function() {
   pre_select_container.value = 0; // jump to first slide
 }, 2000)
 
+function startNoInternetTimer(){
+  message_received=false;
+  setTimeout(function(){
+    if(!message_received){
+      translateScreen("Keine Verbindung", "Zurzeit kann keine Verbindung mit dem Smartphone hergestellt werden.",
+                      "No connection", "It seems that you don't have a connection to your phone.");
+
+      scrollview.height = 150;
+      vibration.start("nudge-max");
+    }
+  }, 10000);
+}
+
+function hideTimeTable(){
+  stationboard.style.display = "inline";
+  
+  time_one__background_number.style.display = "none";
+  time_one__number.style.display = "none";
+  time_one__destination.style.display = "none";
+  time_one__platform.style.display = "none";
+  time_one__time.style.display = "none";
+
+  time_two__background_number.style.display = "none";
+  time_two__number.style.display = "none";
+  time_two__destination.style.display = "none";
+  time_two__platform.style.display = "none";
+  time_two__time.style.display = "none";
+
+  time_three__background_number.style.display = "none";
+  time_three__number.style.display = "none";
+  time_three__destination.style.display = "none";
+  time_three__platform.style.display = "none";
+  time_three__time.style.display = "none";
+
+  time_four__background_number.style.display = "none";
+  time_four__number.style.display = "none";
+  time_four__destination.style.display = "none";
+  time_four__platform.style.display = "none";
+  time_four__time.style.display = "none";
+}
