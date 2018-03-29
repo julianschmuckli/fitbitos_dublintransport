@@ -78,6 +78,10 @@ var data;
 messaging.peerSocket.onmessage = function(evt) {
   if (evt.data!=undefined) {
     message_received = true;
+    if(displayInMinutes){ //Reset time changer
+       showTimeDisplay();
+    }
+       
     if(evt.data.error){
       if(evt.data.message=="no_location"){        
         translateScreen("Kein Standort", "Möglicherweise ist dein Standort auf deinem Smartphone deaktiviert oder nicht empfangbar.",
@@ -202,6 +206,10 @@ messaging.peerSocket.onmessage = function(evt) {
       scrollview.height = 400;
       vibration.start("confirmation-max");
       
+      if(evt.data.settings.minutesFirst=="true"){
+        showMinuteDisplay();
+      }
+      
       //Change station
       document.onkeypress = function(e) {
         if(e.key == "down"){
@@ -232,8 +240,10 @@ messaging.peerSocket.onmessage = function(evt) {
 function translateScreen(name_text_de, content_text_de, name_text_en, content_text_en){
   hideTimeTable();
   switch(language){
+    case 'de_DE':
+    case 'de_de':
+    case 'de_De':
     case 'de-de':
-    case 'de-DE':
       name.text = name_text_de;
       stationboard.text = content_text_de;
       break;
@@ -245,66 +255,74 @@ function translateScreen(name_text_de, content_text_de, name_text_en, content_te
   }
 }
 
+function showMinuteDisplay(){
+  time_one__time.x = time_one__time.x - 10;
+  time_two__time.x = time_two__time.x - 10;
+  time_three__time.x = time_three__time.x - 10;
+  time_four__time.x = time_four__time.x - 10;
+
+  time_one__time.text = util.getMinutes(data.departures[0]);
+  time_two__time.text = util.getMinutes(data.departures[1]);
+  time_three__time.text = util.getMinutes(data.departures[2]);
+  time_four__time.text = util.getMinutes(data.departures[3]);
+  displayInMinutes = true;
+}
+
+function showTimeDisplay(){
+  time_one__time.x = distance_between_time_and_details;
+  time_two__time.x = distance_between_time_and_details;
+  time_three__time.x = distance_between_time_and_details;
+  time_four__time.x = distance_between_time_and_details;
+
+  time_one__time.text = util.getTime(data.departures[0]);
+  time_two__time.text = util.getTime(data.departures[1]);
+  time_three__time.text = util.getTime(data.departures[2]);
+  time_four__time.text = util.getTime(data.departures[3]);
+  displayInMinutes = false;
+}
+
 function changeTimeDisplay(){
   if(displayInMinutes){
-    time_one__time.x = time_one__time.x - 10;
-    time_two__time.x = time_two__time.x - 10;
-    time_three__time.x = time_three__time.x - 10;
-    time_four__time.x = time_four__time.x - 10;
-    
-    time_one__time.text = util.getMinutes(data.departures[0]);
-    time_two__time.text = util.getMinutes(data.departures[1]);
-    time_three__time.text = util.getMinutes(data.departures[2]);
-    time_four__time.text = util.getMinutes(data.departures[3]);
-    displayInMinutes = false;
+    showTimeDisplay();
   }else{
-    time_one__time.x = distance_between_time_and_details;
-    time_two__time.x = distance_between_time_and_details;
-    time_three__time.x = distance_between_time_and_details;
-    time_four__time.x = distance_between_time_and_details;
-    
-    time_one__time.text = util.getTime(data.departures[0]);
-    time_two__time.text = util.getTime(data.departures[1]);
-    time_three__time.text = util.getTime(data.departures[2]);
-    time_four__time.text = util.getTime(data.departures[3]);
-    displayInMinutes = true;
+    showMinuteDisplay();
   }
 }
 
 //Pre-select
 let pre_select_container = document.getElementById("pre_select").getElementById("container");
-let pre_select_currentIndex = 0;
+//let pre_select_currentIndex = 0;
 
-document.getElementsByClassName('pre_selector').forEach(function(current){
-  current.addEventListener("click", function() {
-    pre_select.style.display = "none";
-    switch(pre_select_currentIndex){
-      case 0: //Favourites
-        current_menu = 0;
-        messaging.peerSocket.send({key:"loadFavourites", menu: current_menu});
-        
-        startNoInternetTimer();
-        translateScreen("Lade deine Favoriten...","Falls du noch keine Favoriten definiert hast, kannst du diese in den Einstellungen festlegen.","Loading your favourites...","If you didn't have defined your favourites, you can do this via the settings in the app.");
-        break;
-      case 1: //Location
-        current_menu = 1;
-        messaging.peerSocket.send({key:"loadLocation", menu: current_menu});
-        
-        startNoInternetTimer();
-        getStations();
-        break;
-    }
-  });
+translate(language, document.getElementById("text_image_1"),"Lokal","Local");
+translate(language, document.getElementById("text_image_2"),"Favoriten","Favourites");
+
+document.getElementById('background_image_1').addEventListener("click", function() {
+  pre_select.style.display = "none";
+  //Location
+  current_menu = 1;
+  try{
+    messaging.peerSocket.send({key:"loadLocation", menu: current_menu});
+  }catch(e){
+    translateScreen("Fehler","Es ist ein Fehler aufgetreten. Bitte überprüfe die Einstellungen in der Fitbit App oder versuche es in ein paar Minuten erneut.","Error","Please check the settings in the fitbit app or try it again in a few minutes.");
+  }
+
+  startNoInternetTimer();
+  getStations();
 });
 
-setInterval(function() {
-  pre_select_currentIndex = pre_select_container.value; // get the current index (don't do this IRL)
-}, 100);
+document.getElementById('background_image_2').addEventListener("click", function() {
+  pre_select.style.display = "none";
+  //Favourites
+  current_menu = 0;
+  try{
+    messaging.peerSocket.send({key:"loadFavourites", menu: current_menu});
+  }catch(e){
+    translateScreen("Fehler","Es ist ein Fehler aufgetreten. Bitte überprüfe die Einstellungen in der Fitbit App oder versuche es in ein paar Minuten erneut.","Error","Please check the settings in the fitbit app or try it again in a few minutes.");
+  }
 
-
-setTimeout(function() {
-  pre_select_container.value = 0; // jump to first slide
-}, 2000)
+  startNoInternetTimer();
+  translateScreen("Lade deine Favoriten...","Falls du noch keine Favoriten definiert hast, kannst du diese in den Einstellungen festlegen.","Loading your favourites...","If you didn't have defined your favourites, you can do this via the settings in the app.");
+});
 
 function startNoInternetTimer(){
   message_received=false;
@@ -345,4 +363,18 @@ function hideTimeTable(){
   time_four__destination.style.display = "none";
   time_four__platform.style.display = "none";
   time_four__time.style.display = "none";
+}
+
+function translate(current_language, element, value_de, value_en){
+  switch(current_language){
+    case 'de_DE':
+    case 'de_de':
+    case 'de_De':
+    case 'de-de':
+      element.text = value_de;
+      break;
+    default:
+      element.text = value_en;
+      break;
+  }
 }

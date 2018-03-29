@@ -18,10 +18,12 @@
       <use id='container' href='#panoramaview' overflow='hidden'>
         
         <use id="item1" href="#panoramaview-item">
-          <image id="img1" class="pre_selector" href="favourite.png" pointer-events="visible" load="sync" />
+          <image id="background_image_1" class="pre_selector" href="location.png" pointer-events="visible" load="sync" />
+          <text x="50%-35" y="50%+110" fill="white" id="text_image_1">Lokal</text>
         </use>        
         <use id="item2" href="#panoramaview-item">
-          <image id="img" class="pre_selector" href="location.png" pointer-events="visible" load="sync" />
+          <image id="background_image_2" class="pre_selector" href="favourite.png" pointer-events="visible" load="sync" />
+          <text x="50%-60" y="50%+110" fill="white" id="text_image_2">Favoriten</text>
         </use>
 
         <!-- Have enough dots for your slides (extras are hidden) -->

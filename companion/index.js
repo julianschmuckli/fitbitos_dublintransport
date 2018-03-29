@@ -1,8 +1,10 @@
 import { geolocation } from "geolocation";
 import * as messaging from "messaging";
+import { locale } from "user-settings";
 import { settingsStorage } from "settings";
 
 import * as variables from "../common/variables.js";
+import * as util from "../common/utils.js";
 
 var index = 1;
 var current_favourite_number = -1;
@@ -26,7 +28,7 @@ function getStations(position) {
   longitude = position.coords.longitude;
   
   //@Test
-  /*var location_chosen = 1;
+  /*var location_chosen = 0;
   latitude = [53.323288, 53.398299][location_chosen];
   longitude = [-6.261120, -6.242622][location_chosen];*/
   
@@ -102,6 +104,9 @@ function fetchStop(id, name){
 
           }
         }
+        
+        data_response.settings = {};
+        data_response.settings.minutesFirst = settingsStorage.getItem("minutesFirst");
 
         sendResponse(data_response);
       });
@@ -140,12 +145,24 @@ messaging.peerSocket.onmessage = function(evt) {
   }
   //Favourites
   else if(evt.data.key=="changeStationDown" && evt.data.menu == 0){
-    getFavourite(JSON.parse(settingsStorage.getItem("favourite_2")));
+    try{
+      getFavourite(JSON.parse(settingsStorage.getItem("favourite_2")));
+    }catch(e){
+      
+    }
   }else if(evt.data.key=="changeStationUp" && evt.data.menu == 0){
-    getFavourite(JSON.parse(settingsStorage.getItem("favourite_1")));
+    try{
+      getFavourite(JSON.parse(settingsStorage.getItem("favourite_1")));
+    }catch(e){
+      
+    }
   }else{
     index = 1;
-    getFavourite(JSON.parse(settingsStorage.getItem("favourite_1")));
+    try{
+      getFavourite(JSON.parse(settingsStorage.getItem("favourite_1")));
+    }catch(e){
+      
+    }
   }
 }
 
@@ -160,6 +177,18 @@ messaging.peerSocket.onerror = function(err) {
 --------  Settings  --------------
 ----------------------------------
 */
+
+translate(locale.language, "show_minutes_first","Zeige Minuten zuerst","Show minutes first");
+translate(locale.language, "other_settings","Andere Einstellungen","Other settings");
+
+translate(locale.language, "add_stop","Haltestelle hinzufügen","Add stop/station");
+translate(locale.language, "search_stops","Haltestelle suchen","Search stops/stations");
+
+translate(locale.language, "favourite_stops","Favorisierte Haltestellen","Favourite stops/stations");
+translate(locale.language, "first_favourite_stop","Erste Haltestelle","First stop/station");
+translate(locale.language, "second_favourite_stop","Zweite Haltestelle","Second stop/station");
+
+translate(locale.language, "favourite_stops_description","Lege hier fest, welche Haltestellen du unter Favoriten anzeigen möchtest.","Set here the stops/stations which you want to display in the favourite section.");
 
 settingsStorage.onchange = function(evt) {
   if (evt.key === "searchStations"){
@@ -181,4 +210,23 @@ function loadResults(value){
         settingsStorage.setItem('resultStations', JSON.stringify(autoValues));
       });
   });
+}
+
+function translate(current_language, key, value_de, value_en){
+  switch(current_language){
+    case 'de_DE':
+    case 'de_de':
+    case 'de-de':
+    case 'de-DE':
+    case 'de-CH':
+    case 'de-AT':
+    case 'de-De':
+    case 'de_De':
+      settingsStorage.setItem("t_"+key, value_de);
+      break;
+    default:
+      console.log(current_language);
+      settingsStorage.setItem("t_"+key, value_en);
+      break;
+  }
 }

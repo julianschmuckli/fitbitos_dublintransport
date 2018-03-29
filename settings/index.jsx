@@ -2,13 +2,13 @@ function settings(props) {
   return (
     <Page>
       <Section
-        title={<Text bold align="center">Favourite stops</Text>}>
-        <Text>Search here for stops, which you can access when you swipe from right to left in the app.</Text>
+        title={<Text bold>{props.settingsStorage.getItem("t_favourite_stops")}</Text>}>
+        <Text>{props.settingsStorage.getItem("t_favourite_stops_description")}</Text>
         <TextInput
-          title="First favourite stop"
-          label="First favourite stop"
-          placeholder="Search for stops"
-          action="Add stop"
+          title={props.settingsStorage.getItem("t_first_favourite_stop")}
+          label={props.settingsStorage.getItem("t_first_favourite_stop")}
+          placeholder={props.settingsStorage.getItem("t_search_for_stops")}
+          action={props.settingsStorage.getItem("t_add_stop")}
           value={(() => { try{ return JSON.parse(props.settingsStorage.getItem("favourite_1"))}catch(e){ }})()}
           onChange={value => props.settingsStorage.setItem('favourite_1', JSON.stringify(value))}
           onAutocomplete={(value) => {
@@ -22,10 +22,10 @@ function settings(props) {
           }}
         />
         <TextInput
-          title="Second favourite stop"
-          label="Second favourite stop"
-          placeholder="Search for stops"
-          action="Add stop"
+          title={props.settingsStorage.getItem("t_second_favourite_stop")}
+          label={props.settingsStorage.getItem("t_second_favourite_stop")}
+          placeholder={props.settingsStorage.getItem("t_search_for_stops")}
+          action={props.settingsStorage.getItem("t_add_stop")}
           value={(() => { try{ return JSON.parse(props.settingsStorage.getItem("favourite_2"))}catch(e){}})()}
           onChange={value => props.settingsStorage.setItem('favourite_2', JSON.stringify(value))}
           onAutocomplete={(value) => {
@@ -37,6 +37,13 @@ function settings(props) {
             
             return JSON.parse(autoValues);
           }}
+        />
+      </Section>
+      <Section
+        title={<Text bold>{props.settingsStorage.getItem("t_other_settings")}</Text>}>
+        <Toggle
+          label={props.settingsStorage.getItem("t_show_minutes_first")}
+          settingsKey="minutesFirst"
         />
       </Section>
     </Page>
